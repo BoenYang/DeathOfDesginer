@@ -2,6 +2,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 public class ConfigMng : MonoBehaviour
 {
@@ -75,8 +76,7 @@ public class ConfigMng : MonoBehaviour
     /// <summary>
     ///     ConfigMng主字典
     /// </summary>
-    private Dictionary<Type, Dictionary<int, ConfigDataBase>> m_configDic =
-        new Dictionary<Type, Dictionary<int, ConfigDataBase>>();
+    private Dictionary<Type, Dictionary<int, ConfigDataBase>> m_configDic  =new Dictionary<Type, Dictionary<int, ConfigDataBase>>();
 
     /// <summary>
     /// 所有配置表加载完成委托
@@ -88,19 +88,23 @@ public class ConfigMng : MonoBehaviour
     /// </summary>
     public event LoadEnd AllConfigLoadEnd;
 
-    public static ConfigMng Instance { get; private set; }
+    public bool ConfigLoaded  = false;
 
-    public void Start()
+    public static ConfigMng Instance;
+
+    private void Start()
     {
         Instance = this;
+    }
 
-        gameObject.isStatic = true;
-        //协程加载数据表
+    public void Init()
+    {
         StartCoroutine(LoadConfig());
     }
 
     private IEnumerator LoadConfig()
     {
+        ConfigLoaded = false;
         foreach (Type type in ConfigList.AllConfigTypeList)
         {
             yield return null;
@@ -113,12 +117,13 @@ public class ConfigMng : MonoBehaviour
         {
             AllConfigLoadEnd();
         }
+        ConfigLoaded = true;
     }
 
     /// <summary>
     ///     分析单个数据表
     /// </summary>
-    private Dictionary<int, ConfigDataBase> BinaryParse(byte[] binary, Type configType)
+    private static Dictionary<int, ConfigDataBase> BinaryParse(byte[] binary, Type configType)
     {
         Dictionary<int, ConfigDataBase> dic = new Dictionary<int, ConfigDataBase>();
 
