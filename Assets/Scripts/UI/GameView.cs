@@ -34,7 +34,7 @@ public class GameView : UIBase
 
     private EventConfig[] nextEventConfigs = new EventConfig[2];
 
-    private int[] healthValue;
+    public int[] healthValue;
 
     public override void OnInit()
     {
@@ -77,8 +77,6 @@ public class GameView : UIBase
             return;
         }
         
-        Debug.Log("end drag");
-
         if (Mathf.Abs(xMoveDistance) > EnsureDistance)
         {
             NextEventImage();
@@ -125,13 +123,11 @@ public class GameView : UIBase
 
         if (xMoveDistance < 0)
         {
-            Debug.Log(" left ");
             NextEvents[0].gameObject.SetActive(true);
             NextEvents[1].gameObject.SetActive(false);
         }
         else
         {
-            Debug.Log(" right ");
             NextEvents[0].gameObject.SetActive(false);
             NextEvents[1].gameObject.SetActive(true);
         }
@@ -203,8 +199,6 @@ public class GameView : UIBase
     private void NextEventImage()
     {
 
-        Debug.Log("next event");
-
         isAnimating = true;
         DisableTouch();
 
@@ -212,45 +206,31 @@ public class GameView : UIBase
         float dir = Mathf.Sign(xMoveDistance);
         int nextEventIndex = 0;
 
-        if (currentEventConfig.Needchoice == 1)
+
+        if (xMoveDistance < 0)
         {
-   
-            if (xMoveDistance < 0)
-            {
-                nextEventIndex = 0;
-            }
-            else
-            {
-                nextEventIndex = 1;
-            }
+            nextEventIndex = 0;
         }
         else
         {
-            nextEventIndex = 0;
+            nextEventIndex = 1;
         }
 
         if (nextEventIndex == 0)
         {
-            Image Bar;
             for (int i = 0; i < currentEventConfig.ChoiceOneSorce.Length; i++)
             {
                 healthValue[i] += currentEventConfig.ChoiceOneSorce[i];
-                Bar = Bars[i];
-                float fillAmount = healthValue[i] / 100f;
-                DOTween.To(() => Bar.fillAmount, (f) => Bar.fillAmount = f, fillAmount, 0.5f).Play();
             }
+            UpdateFillAmount();
         }
         else
         {
-
-            Image Bar;
             for (int i = 0; i < currentEventConfig.ChoiceTwoSorce.Length; i++)
             {
                 healthValue[i] += currentEventConfig.ChoiceTwoSorce[i];
-                Bar = Bars[i];
-                float fillAmount = healthValue[i] / 100f;
-                DOTween.To(() => Bar.fillAmount, (f) => Bar.fillAmount = f, fillAmount, 0.5f).Play();
             }
+            UpdateFillAmount();
         }
 
         currentEventConfig = nextEventConfigs[nextEventIndex];
@@ -261,8 +241,6 @@ public class GameView : UIBase
         seq.Insert(0, CurrentEvent.rectTransform.DOLocalMove(originPos + new Vector3(360, 0, 0) * dir, 1.0f));
         seq.OnComplete(() =>
         {
-            Debug.Log("end " + Time.time);
-         
 
             Image temp = CurrentEvent;
             CurrentEvent = NextEvents[nextEventIndex];
@@ -309,5 +287,11 @@ public class GameView : UIBase
         }
     }
 
-
+    private void UpdateFillAmount()
+    {
+        DOTween.To(() => Bars[0].fillAmount, (f) => Bars[0].fillAmount = f, healthValue[0] / 100f, 0.5f).Play();
+        DOTween.To(() => Bars[1].fillAmount, (f) => Bars[1].fillAmount = f, healthValue[1] / 100f, 0.5f).Play();
+        DOTween.To(() => Bars[2].fillAmount, (f) => Bars[2].fillAmount = f, healthValue[2] / 100f, 0.5f).Play();
+        DOTween.To(() => Bars[3].fillAmount, (f) => Bars[3].fillAmount = f, healthValue[3] / 100f, 0.5f).Play();
+    }
 }

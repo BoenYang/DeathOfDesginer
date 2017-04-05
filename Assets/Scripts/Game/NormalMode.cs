@@ -24,7 +24,6 @@ public class NormalMode : GameModeBase
 
         int randIndex = Random.Range(0, EventConfigMng.EventDict[1].Count);
         firstEvent = EventConfigMng.EventDict[1][randIndex];
-
         UIManager.OpenPanel("GameView",false,HealthValue,firstEvent);
     }
 
