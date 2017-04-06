@@ -22,17 +22,15 @@ public class GameView : UIBase
 
     private Vector3 originPos;
 
-    public bool isAnimating = false;
+    private bool isAnimating = false;
 
-    public float xMoveDistance;
-
-    private Vector2 touchDownPos;
+    private float xMoveDistance;
 
     private Sequence seq = null;
 
     private EventConfig currentEventConfig;
 
-    private EventConfig[] nextEventConfigs = new EventConfig[2];
+    private readonly EventConfig[] nextEventConfigs = new EventConfig[2];
 
     public int[] healthValue;
 
@@ -64,9 +62,6 @@ public class GameView : UIBase
         {
             return;
         }
-
-        PointerEventData pointData = eventData as PointerEventData;
-        touchDownPos = pointData.position;
     }
 
     public void OnEndDrag(BaseEventData eventData)
@@ -116,10 +111,11 @@ public class GameView : UIBase
 
         PointerEventData pointData = eventData as PointerEventData;
         xMoveDistance += pointData.delta.x;
+        float angleRatio = -xMoveDistance / EnsureDistance;
+
         Vector2 pos = originPos + new Vector3(xMoveDistance, 0,0);
         CurrentEvent.rectTransform.localPosition = pos;
-        float angleRatio = -xMoveDistance/EnsureDistance;
-        CurrentEvent.rectTransform.eulerAngles = new Vector3(0,0,40 * angleRatio);
+        CurrentEvent.rectTransform.eulerAngles = new Vector3(0,0,MaxRotAngle * angleRatio);
 
         if (xMoveDistance < 0)
         {
