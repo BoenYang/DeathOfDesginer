@@ -8,6 +8,7 @@ using UnityEngine;
 /// </summary>
 public abstract class GameModeBase
 {
+
     //游戏是否在运行
     public bool GameRunning = false;
 

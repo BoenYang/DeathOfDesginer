@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 
-public class GameStart : MonoBehaviour {
+public class GameStart : MonoBehaviour
+{
 
+    public static GameModeBase Game;
 
 	void Start ()
 	{
@@ -12,9 +14,9 @@ public class GameStart : MonoBehaviour {
 
     private void OnConfigLoaded()
     {
-        GameModeBase game = GameModeBase.CreateGameMode("Normal");
-        game.Init();
-        game.StartGame();
+        Game = GameModeBase.CreateGameMode("Normal");
+        Game.Init();
+        Game.StartGame();
     }
 
 }

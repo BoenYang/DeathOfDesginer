@@ -32,26 +32,28 @@ public class GameView : UIBase
 
     private readonly EventConfig[] nextEventConfigs = new EventConfig[2];
 
-    public int[] healthValue;
+    private int[] healthValue;
+
+    private int turnCount;
 
     public override void OnInit()
     {
         originPos = CurrentEvent.rectTransform.localPosition;
+        AddMsgListener("RestartGame", OnRestartGame);
     }
 
     public override void OnRefresh()
     {
         healthValue = (int[])Args[0];
         currentEventConfig = Args[1] as EventConfig;
-        ChooseDesc.text = currentEventConfig.Event;
+        turnCount = (int)Args[2];
 
         for (int i = 0; i < healthValue.Length; i++)
         {
             Bars[i].fillAmount = healthValue[i]/100f;
         }
-
+        ChooseDesc.text = currentEventConfig.Event;
         UpdateNextEventConfig();
-
     }
 
     public void OnBeginDrag(BaseEventData eventData)
@@ -152,6 +154,20 @@ public class GameView : UIBase
         }
     }
 
+    private void OnRestartGame(UIMsg msg)
+    {
+        healthValue = (int[])msg.args[0];
+        currentEventConfig = msg.args[1] as EventConfig;
+
+        for (int i = 0; i < healthValue.Length; i++)
+        {
+            Bars[i].fillAmount = healthValue[i] / 100f;
+        }
+        ChooseDesc.text = currentEventConfig.Event;
+        UpdateNextEventConfig();
+
+    }
+
     private void UpdateNextEventConfig()
     {
         if (currentEventConfig.Needchoice == 1)
@@ -229,6 +245,7 @@ public class GameView : UIBase
             UpdateFillAmount();
         }
 
+        turnCount ++;
         currentEventConfig = nextEventConfigs[nextEventIndex];
         ChooseDesc.text = currentEventConfig.Event;
 
@@ -261,6 +278,16 @@ public class GameView : UIBase
             UpdateNextEventConfig();
             isAnimating = false;
             EnableTouch();
+
+            for (int i = 0; i < healthValue.Length; i++)
+            {
+                if (healthValue[i] <= 0 || healthValue[i] >= 100)
+                {
+                    GameStart.Game.GameOver();
+                    UIManager.OpenPanel("ResultView",false,healthValue,turnCount);
+                    return;
+                }
+            }
         });
         seq.Play();
     }
