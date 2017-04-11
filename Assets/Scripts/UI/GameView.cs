@@ -1,8 +1,7 @@
-﻿using UnityEngine;
-using System.Collections;
+﻿using System;
+using UnityEngine;
 using System.Collections.Generic;
 using DG.Tweening;
-using DG.Tweening.Plugins;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -34,8 +33,6 @@ public class GameView : UIBase
 
     private int[] healthValue;
 
-    private int turnCount;
-
     public override void OnInit()
     {
         originPos = CurrentEvent.rectTransform.localPosition;
@@ -46,14 +43,15 @@ public class GameView : UIBase
     {
         healthValue = (int[])Args[0];
         currentEventConfig = Args[1] as EventConfig;
-        turnCount = (int)Args[2];
 
         for (int i = 0; i < healthValue.Length; i++)
         {
             Bars[i].fillAmount = healthValue[i]/100f;
         }
+
         ChooseDesc.text = currentEventConfig.Event;
-        UpdateNextEventConfig();
+
+        GameStart.Game.UpdateNextEventConfig();
     }
 
     public void OnBeginDrag(BaseEventData eventData)
@@ -80,7 +78,6 @@ public class GameView : UIBase
         }
         else
         {
-
             isAnimating = true;
             DisableTouch();
 
@@ -93,7 +90,6 @@ public class GameView : UIBase
             {
                 isAnimating = false;
                 EnableTouch();
-
                 for (int i = 0; i < NextEvents.Length; i++)
                 {
                     NextEvents[i].gameObject.SetActive(false);
@@ -164,49 +160,8 @@ public class GameView : UIBase
             Bars[i].fillAmount = healthValue[i] / 100f;
         }
         ChooseDesc.text = currentEventConfig.Event;
-        UpdateNextEventConfig();
-
     }
 
-    private void UpdateNextEventConfig()
-    {
-        if (currentEventConfig.Needchoice == 1)
-        {
-
-            if (currentEventConfig.ChoiceOneid[0] != -1)
-            {
-                nextEventConfigs[0] = EventConfig.Get(currentEventConfig.ChoiceOneid[0]);
-            }
-            else
-            {
-                int randIndex = Random.Range(0, EventConfigMng.EventDict[1].Count);
-                nextEventConfigs[0]= EventConfigMng.EventDict[1][randIndex];
-            }
-
-            if (currentEventConfig.ChoiceTwoid[0] != -1)
-            {
-                nextEventConfigs[1] = EventConfig.Get(currentEventConfig.ChoiceTwoid[0]);
-            }
-            else
-            {
-                int randIndex = Random.Range(0, EventConfigMng.EventDict[1].Count);
-                nextEventConfigs[1] = EventConfigMng.EventDict[1][randIndex];
-            }
-        }
-        else
-        {
-
-            if (currentEventConfig.ChoiceOneid[0] != -1)
-            {
-                nextEventConfigs[0] = nextEventConfigs[1] = EventConfig.Get(currentEventConfig.ChoiceOneid[0]);
-            }
-            else
-            {
-                int randIndex = Random.Range(0, EventConfigMng.EventDict[1].Count);
-                nextEventConfigs[0] = nextEventConfigs[1]  = EventConfigMng.EventDict[1][randIndex];
-            }
-        }
-    }
 
     private void NextEventImage()
     {
@@ -215,11 +170,11 @@ public class GameView : UIBase
         DisableTouch();
 
         seq = DOTween.Sequence();
-        float dir = Mathf.Sign(xMoveDistance);
+        int dir = Math.Sign(xMoveDistance);
+
         int nextEventIndex = 0;
 
-
-        if (xMoveDistance < 0)
+        if (dir < 0)
         {
             nextEventIndex = 0;
         }
@@ -228,29 +183,12 @@ public class GameView : UIBase
             nextEventIndex = 1;
         }
 
-        if (nextEventIndex == 0)
-        {
-            for (int i = 0; i < currentEventConfig.ChoiceOneSorce.Length; i++)
-            {
-                healthValue[i] += currentEventConfig.ChoiceOneSorce[i];
-            }
-            UpdateFillAmount();
-        }
-        else
-        {
-            for (int i = 0; i < currentEventConfig.ChoiceTwoSorce.Length; i++)
-            {
-                healthValue[i] += currentEventConfig.ChoiceTwoSorce[i];
-            }
-            UpdateFillAmount();
-        }
-
-        turnCount ++;
-        currentEventConfig = nextEventConfigs[nextEventIndex];
+        currentEventConfig = GameStart.Game.ChooseEvent(dir);
+        UpdateFillAmount();
         ChooseDesc.text = currentEventConfig.Event;
 
         seq.Insert(0, DOTween.ToAlpha(() => CurrentEvent.color, (c) => CurrentEvent.color = c, 0, 1.0f));
-        seq.Insert(0, CurrentEvent.rectTransform.DORotate(new Vector3(0, 0, -60*dir), 1.0f));
+        seq.Insert(0, CurrentEvent.rectTransform.DORotate(new Vector3(0, 0, -60 * dir), 1.0f));
         seq.Insert(0, CurrentEvent.rectTransform.DOLocalMove(originPos + new Vector3(360, 0, 0) * dir, 1.0f));
         seq.OnComplete(() =>
         {
@@ -258,10 +196,8 @@ public class GameView : UIBase
             Image temp = CurrentEvent;
             CurrentEvent = NextEvents[nextEventIndex];
             NextEvents[nextEventIndex] = temp;
-
             NextEvents[nextEventIndex].rectTransform.localPosition = originPos;
             NextEvents[nextEventIndex].rectTransform.eulerAngles = Vector3.zero;
-
             CurrentEvent.rectTransform.SetAsLastSibling();
 
             Color c = NextEvents[nextEventIndex].color;
@@ -275,19 +211,12 @@ public class GameView : UIBase
                 image.gameObject.SetActive(false);
             }
 
-            UpdateNextEventConfig();
-            isAnimating = false;
-            EnableTouch();
 
-            for (int i = 0; i < healthValue.Length; i++)
-            {
-                if (healthValue[i] <= 0 || healthValue[i] >= 100)
-                {
-                    GameStart.Game.GameOver();
-                    UIManager.OpenPanel("ResultView",false,healthValue,turnCount);
-                    return;
-                }
-            }
+            EnableTouch();
+            isAnimating = false;
+
+            GameStart.Game.UpdateNextEventConfig();
+            GameStart.Game.CheckGameOver();
         });
         seq.Play();
     }

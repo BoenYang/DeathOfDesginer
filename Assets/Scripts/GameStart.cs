@@ -3,7 +3,7 @@
 public class GameStart : MonoBehaviour
 {
 
-    public static GameModeBase Game;
+    public static NormalMode Game;
 
 	void Start ()
 	{
@@ -14,7 +14,7 @@ public class GameStart : MonoBehaviour
 
     private void OnConfigLoaded()
     {
-        Game = GameModeBase.CreateGameMode("Normal");
+        Game = (NormalMode)GameModeBase.CreateGameMode("Normal");
         Game.Init();
         Game.StartGame();
     }
