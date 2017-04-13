@@ -14,9 +14,12 @@ public class GameStart : MonoBehaviour
 
     private void OnConfigLoaded()
     {
+        Debug.Log("config loaded");
         Game = (NormalMode)GameModeBase.CreateGameMode("Normal");
         Game.Init();
         Game.StartGame();
+
+        Destroy(gameObject);
     }
 
 }

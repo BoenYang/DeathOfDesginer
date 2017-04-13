@@ -33,8 +33,11 @@ public class GameView : UIBase
 
     private int[] healthValue;
 
+    private Vector2 startPos;
+
     public override void OnInit()
     {
+        Debug.Log("Game View show");
         originPos = CurrentEvent.rectTransform.localPosition;
         AddMsgListener("RestartGame", OnRestartGame);
     }
@@ -62,6 +65,8 @@ public class GameView : UIBase
         {
             return;
         }
+        PointerEventData pointData = eventData as PointerEventData;
+        startPos = pointData.position;
     }
 
     public void OnEndDrag(BaseEventData eventData)
@@ -108,10 +113,10 @@ public class GameView : UIBase
         }
 
         PointerEventData pointData = eventData as PointerEventData;
-        xMoveDistance += pointData.delta.x;
+        xMoveDistance = pointData.position.x - startPos.x;
         float angleRatio = -xMoveDistance / EnsureDistance;
 
-        Vector2 pos = originPos + new Vector3(xMoveDistance, 0,0);
+        Vector2 pos = originPos + new Vector3(xMoveDistance*0.5f, 0,0);
         CurrentEvent.rectTransform.localPosition = pos;
         CurrentEvent.rectTransform.eulerAngles = new Vector3(0,0,MaxRotAngle * angleRatio);
 

@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class NormalMode : GameModeBase
 {
@@ -18,6 +17,8 @@ public class NormalMode : GameModeBase
 
     public override void Init()
     {
+        Debug.Log("init game");
+
         healthValue = new int[4];
         for (int i = 0; i < healthValue.Length; i++)
         {
