@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using NUnit.Framework.Constraints;
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.EventSystems;
@@ -25,7 +26,6 @@ public class UIEditor : EditorWindow {
 
         GameObject uiCamrea = new GameObject("UICamera");
         Camera camera = uiCamrea.AddComponent<Camera>();
-        camera.orthographic = true;
 
         canvas.worldCamera = camera;
 
@@ -43,7 +43,7 @@ public class UIEditor : EditorWindow {
         AssetDatabase.Refresh();
     }
 
-    [MenuItem("GameObject/UI/Create UI")]
+    [MenuItem("GameObject/Create UI")]
     public static void CreateUI()
     {
 
