@@ -7,13 +7,15 @@ using UnityEngine.UI;
 
 public class GameView : UIBase
 {
-    public Image CurrentEvent;
+    public EventImage CurrentEvent;
 
-    public Image[] NextEvents;
+    public List<EventImage> NextEvents;
+
+    public List<Image> Bars;
 
     public Text ChooseDesc;
 
-    public List<Image> Bars; 
+    public Text RoleName;
 
     public float EnsureDistance = 20;
 
@@ -29,15 +31,31 @@ public class GameView : UIBase
 
     private EventConfig currentEventConfig;
 
-    private readonly EventConfig[] nextEventConfigs = new EventConfig[2];
+    private EventConfig[] nextEventConfigs;
 
     private int[] healthValue;
 
     private Vector2 startPos;
 
+    private Dictionary<int, string> roleNameDict = new Dictionary<int, string>
+    {
+        {1,"老板"},
+        {2,"记着"},
+        {3,"程序"},
+        {4,"美术"},
+        {5,"其他策划"},
+        {6,"玩家"},
+    }; 
+
     public override void OnInit()
     {
         Debug.Log("Game View show");
+        CurrentEvent.Init();
+        for (int i = 0; i < NextEvents.Count; i++)
+        {
+            NextEvents[i].Init();
+        }
+
         originPos = CurrentEvent.rectTransform.localPosition;
         AddMsgListener("RestartGame", OnRestartGame);
     }
@@ -52,9 +70,13 @@ public class GameView : UIBase
             Bars[i].fillAmount = healthValue[i]/100f;
         }
 
-        ChooseDesc.text = currentEventConfig.Event;
+        CurrentEvent.SetEvent(currentEventConfig);
 
-        GameStart.Game.UpdateNextEventConfig();
+        ChooseDesc.text = currentEventConfig.Event;
+        RoleName.text = roleNameDict[currentEventConfig.Hero];
+
+        nextEventConfigs = GameStart.Game.UpdateNextEventConfig();
+        SetNextEventImage();
     }
 
     public void OnBeginDrag(BaseEventData eventData)
@@ -79,15 +101,13 @@ public class GameView : UIBase
         
         if (Mathf.Abs(xMoveDistance) > EnsureDistance)
         {
-            NextEventImage();
+            NextEvent();
         }
         else
         {
             isAnimating = true;
             DisableTouch();
 
-            ChooseDesc.text = currentEventConfig.Event;
-            
             seq = DOTween.Sequence();
             seq.Insert(0, CurrentEvent.rectTransform.DOLocalMove(originPos, 1.0f));
             seq.Insert(0, CurrentEvent.transform.DORotate(Vector3.zero, 1.0f));
@@ -95,10 +115,9 @@ public class GameView : UIBase
             {
                 isAnimating = false;
                 EnableTouch();
-                for (int i = 0; i < NextEvents.Length; i++)
-                {
-                    NextEvents[i].gameObject.SetActive(false);
-                }
+
+                CurrentEvent.ChooseOne.gameObject.SetActive(false);
+                CurrentEvent.ChooseTwo.gameObject.SetActive(false);
             });
 
             seq.Play();
@@ -122,36 +141,18 @@ public class GameView : UIBase
 
         if (xMoveDistance < 0)
         {
-            NextEvents[0].gameObject.SetActive(true);
-            NextEvents[1].gameObject.SetActive(false);
+            CurrentEvent.ChooseOne.gameObject.SetActive(true);
+            CurrentEvent.ChooseTwo.gameObject.SetActive(false);
         }
         else
         {
-            NextEvents[0].gameObject.SetActive(false);
-            NextEvents[1].gameObject.SetActive(true);
+            CurrentEvent.ChooseOne.gameObject.SetActive(false);
+            CurrentEvent.ChooseTwo.gameObject.SetActive(true);
         }
 
         if (Mathf.Abs(xMoveDistance) > EnsureDistance)
         {
-            NextEventImage();
-        }
-        else
-        {
-            if (currentEventConfig.Needchoice == 1)
-            {
-                if (xMoveDistance < 0)
-                {
-                    ChooseDesc.text = currentEventConfig.ChoiceOne;
-                }
-                else
-                {
-                    ChooseDesc.text = currentEventConfig.ChoiceTwo;
-                }
-            }
-            else
-            {
-                ChooseDesc.text = currentEventConfig.ChoiceOne;
-            }
+            NextEvent();
         }
     }
 
@@ -167,10 +168,17 @@ public class GameView : UIBase
         ChooseDesc.text = currentEventConfig.Event;
     }
 
-
-    private void NextEventImage()
+    private void SetNextEventImage()
     {
+        for (int i = 0; i < nextEventConfigs.Length; i++)
+        {
+            NextEvents[i].SetEvent(nextEventConfigs[i]);
+        }
+    }
 
+
+    private void NextEvent()
+    {
         isAnimating = true;
         DisableTouch();
 
@@ -189,38 +197,33 @@ public class GameView : UIBase
         }
 
         currentEventConfig = GameStart.Game.ChooseEvent(dir);
-        UpdateFillAmount();
         ChooseDesc.text = currentEventConfig.Event;
+        RoleName.text = roleNameDict[currentEventConfig.Hero];
 
-        seq.Insert(0, DOTween.ToAlpha(() => CurrentEvent.color, (c) => CurrentEvent.color = c, 0, 1.0f));
+        UpdateFillAmount();
+
+        seq.Insert(0, DOTween.ToAlpha(() => CurrentEvent.Image.color, (c) => CurrentEvent.Image.color = c, 0, 1.0f));
         seq.Insert(0, CurrentEvent.rectTransform.DORotate(new Vector3(0, 0, -60 * dir), 1.0f));
         seq.Insert(0, CurrentEvent.rectTransform.DOLocalMove(originPos + new Vector3(360, 0, 0) * dir, 1.0f));
         seq.OnComplete(() =>
         {
 
-            Image temp = CurrentEvent;
+            EventImage temp = CurrentEvent;
             CurrentEvent = NextEvents[nextEventIndex];
             NextEvents[nextEventIndex] = temp;
             NextEvents[nextEventIndex].rectTransform.localPosition = originPos;
             NextEvents[nextEventIndex].rectTransform.eulerAngles = Vector3.zero;
             CurrentEvent.rectTransform.SetAsLastSibling();
 
-            Color c = NextEvents[nextEventIndex].color;
+            Color c = NextEvents[nextEventIndex].Image.color;
             c.a = 1.0f;
-            NextEvents[nextEventIndex].color = c;
-
-            Image image = null;
-            for (int i = 0; i < NextEvents.Length; i++)
-            {
-                image = NextEvents[i];
-                image.gameObject.SetActive(false);
-            }
-
+            NextEvents[nextEventIndex].Image.color = c;
 
             EnableTouch();
             isAnimating = false;
 
-            GameStart.Game.UpdateNextEventConfig();
+            nextEventConfigs = GameStart.Game.UpdateNextEventConfig();
+            SetNextEventImage();
             GameStart.Game.CheckGameOver();
         });
         seq.Play();
@@ -228,20 +231,15 @@ public class GameView : UIBase
 
     private void DisableTouch()
     {
-        CurrentEvent.raycastTarget = false;
-        for (int i = 0; i < NextEvents.Length; i++)
-        {
-            NextEvents[i].raycastTarget = false;
-        }
+        CurrentEvent.DisableTouch();
+        NextEvents.ForEach((i)=>i.DisableTouch());
+       
     }
 
     private void EnableTouch()
     {
-        CurrentEvent.raycastTarget = true;
-        for (int i = 0; i < NextEvents.Length; i++)
-        {
-            NextEvents[i].raycastTarget = true;
-        }
+        CurrentEvent.EnableTouch();
+        NextEvents.ForEach((i) => i.EnableTouch());
     }
 
     private void UpdateFillAmount()

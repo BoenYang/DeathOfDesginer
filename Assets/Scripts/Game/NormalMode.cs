@@ -44,7 +44,7 @@ public class NormalMode : GameModeBase
         UIManager.DispatchMsg("RestartGame",healthValue,currentEventConfig,turnCount);
     }
 
-    public void CheckGameOver()
+    public bool CheckGameOver()
     {
         for (int i = 0; i < healthValue.Length; i++)
         {
@@ -52,9 +52,10 @@ public class NormalMode : GameModeBase
             {
                 GameStart.Game.GameOver();
                 UIManager.OpenPanel("ResultView", false, healthValue, turnCount);
-                return;
+                return true;
             }
         }
+        return false;
     }
 
     public void NextTurn()
@@ -97,7 +98,7 @@ public class NormalMode : GameModeBase
         return currentEventConfig;
     }
 
-    public void UpdateNextEventConfig()
+    public EventConfig[] UpdateNextEventConfig()
     {
         if (currentEventConfig.Needchoice == 1)
         {
@@ -135,6 +136,7 @@ public class NormalMode : GameModeBase
                 nextEventConfigs[0] = nextEventConfigs[1] = EventConfigMng.EventDict[1][randIndex];
             }
         }
+        return nextEventConfigs;
     }
 
 }
