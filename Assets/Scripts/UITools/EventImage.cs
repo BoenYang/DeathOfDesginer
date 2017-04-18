@@ -37,6 +37,12 @@ public class EventImage : MonoBehaviour
         ChooseOne.text = config.ChoiceOne;
         ChooseTwo.text = config.ChoiceTwo;
 
+        HideChooseText();
+    }
+
+    public void HideChooseText()
+    {
+
         ChooseOne.gameObject.SetActive(false);
         ChooseTwo.gameObject.SetActive(false);
     }

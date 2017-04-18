@@ -13,6 +13,8 @@ public class GameView : UIBase
 
     public List<Image> Bars;
 
+    public List<Image> ChangeIndicator; 
+
     public Text ChooseDesc;
 
     public Text RoleName;
@@ -29,7 +31,7 @@ public class GameView : UIBase
 
     private Sequence seq = null;
 
-    private EventConfig currentEventConfig;
+    public EventConfig currentEventConfig;
 
     private EventConfig[] nextEventConfigs;
 
@@ -75,6 +77,8 @@ public class GameView : UIBase
         ChooseDesc.text = currentEventConfig.Event;
         RoleName.text = roleNameDict[currentEventConfig.Hero];
 
+        ChangeIndicator.ForEach((i)=>i.transform.localScale = Vector3.zero);
+
         nextEventConfigs = GameStart.Game.UpdateNextEventConfig();
         SetNextEventImage();
     }
@@ -98,15 +102,20 @@ public class GameView : UIBase
         {
             return;
         }
-        
+
+       
+
         if (Mathf.Abs(xMoveDistance) > EnsureDistance)
         {
             NextEvent();
         }
         else
         {
+            ChangeIndicator.ForEach((i) => i.transform.localScale = Vector3.zero);
             isAnimating = true;
             DisableTouch();
+
+            CurrentEvent.HideChooseText();
 
             seq = DOTween.Sequence();
             seq.Insert(0, CurrentEvent.rectTransform.DOLocalMove(originPos, 1.0f));
@@ -115,9 +124,6 @@ public class GameView : UIBase
             {
                 isAnimating = false;
                 EnableTouch();
-
-                CurrentEvent.ChooseOne.gameObject.SetActive(false);
-                CurrentEvent.ChooseTwo.gameObject.SetActive(false);
             });
 
             seq.Play();
@@ -143,11 +149,33 @@ public class GameView : UIBase
         {
             CurrentEvent.ChooseOne.gameObject.SetActive(true);
             CurrentEvent.ChooseTwo.gameObject.SetActive(false);
+
+            NextEvents[0].gameObject.SetActive(true);
+            NextEvents[1].gameObject.SetActive(false);
+
+            int[] score = currentEventConfig.ChoiceOneSorce;
+            for (int i = 0; i < score.Length; i++)
+            {
+                float percentage = Mathf.Abs(score[i]) / 20f;
+                ChangeIndicator[i].transform.localScale = Vector3.one * Mathf.Clamp01(Mathf.Abs(xMoveDistance)/EnsureDistance) * percentage;
+            }
         }
         else
         {
             CurrentEvent.ChooseOne.gameObject.SetActive(false);
             CurrentEvent.ChooseTwo.gameObject.SetActive(true);
+
+
+            NextEvents[0].gameObject.SetActive(false);
+            NextEvents[1].gameObject.SetActive(true);
+
+            int[] score = currentEventConfig.ChoiceOneSorce;
+            for (int i = 0; i < score.Length; i++)
+            {
+                float percentage = Mathf.Abs(score[i]) / 20f;
+                ChangeIndicator[i].transform.localScale = Vector3.one * Mathf.Clamp01(Mathf.Abs(xMoveDistance) / EnsureDistance) * percentage;
+            }
+
         }
 
         if (Mathf.Abs(xMoveDistance) > EnsureDistance)
@@ -179,6 +207,7 @@ public class GameView : UIBase
 
     private void NextEvent()
     {
+
         isAnimating = true;
         DisableTouch();
 
@@ -199,6 +228,7 @@ public class GameView : UIBase
         currentEventConfig = GameStart.Game.ChooseEvent(dir);
         ChooseDesc.text = currentEventConfig.Event;
         RoleName.text = roleNameDict[currentEventConfig.Hero];
+        ChangeIndicator.ForEach((i) => i.transform.localScale = Vector3.zero);
 
         UpdateFillAmount();
 
