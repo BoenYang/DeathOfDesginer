@@ -31,7 +31,7 @@ public class GameView : UIBase
 
     private Sequence seq = null;
 
-    public EventConfig currentEventConfig;
+    private EventConfig currentEventConfig;
 
     private EventConfig[] nextEventConfigs;
 

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class NormalMode : GameModeBase
 {
@@ -9,6 +10,8 @@ public class NormalMode : GameModeBase
     private readonly EventConfig[] nextEventConfigs = new EventConfig[2];
 
     private int turnCount;
+
+    private List<EventConfig> randomEventList = new List<EventConfig>(); 
 
     public override string Mode
     {
@@ -26,8 +29,7 @@ public class NormalMode : GameModeBase
         }
 
         turnCount = 0;
-        int randIndex = Random.Range(0, EventConfigMng.EventDict[1].Count);
-        currentEventConfig = EventConfigMng.EventDict[1][randIndex];
+        currentEventConfig = RandomEvent();
         UIManager.OpenPanel("GameView",false,healthValue,currentEventConfig,turnCount);
     }
 
@@ -56,11 +58,6 @@ public class NormalMode : GameModeBase
             }
         }
         return false;
-    }
-
-    public void NextTurn()
-    {
-        turnCount++;
     }
 
     public EventConfig ChooseEvent(int dir)
@@ -109,8 +106,7 @@ public class NormalMode : GameModeBase
             }
             else
             {
-                int randIndex = Random.Range(0, EventConfigMng.EventDict[1].Count);
-                nextEventConfigs[0] = EventConfigMng.EventDict[1][randIndex];
+                nextEventConfigs[0] = RandomEvent();
             }
 
             if (currentEventConfig.ChoiceTwoid[0] != -1)
@@ -119,8 +115,7 @@ public class NormalMode : GameModeBase
             }
             else
             {
-                int randIndex = Random.Range(0, EventConfigMng.EventDict[1].Count);
-                nextEventConfigs[1] = EventConfigMng.EventDict[1][randIndex];
+                nextEventConfigs[1] = RandomEvent();
             }
         }
         else
@@ -132,11 +127,28 @@ public class NormalMode : GameModeBase
             }
             else
             {
-                int randIndex = Random.Range(0, EventConfigMng.EventDict[1].Count);
-                nextEventConfigs[0] = nextEventConfigs[1] = EventConfigMng.EventDict[1][randIndex];
+                nextEventConfigs[0] = nextEventConfigs[1] = RandomEvent();
             }
         }
         return nextEventConfigs;
+    }
+
+    private EventConfig RandomEvent()
+    {
+        if (randomEventList.Count <= 0)
+        {
+            FillRandomEventList();
+        }
+        Random.InitState(System.DateTime.Now.Millisecond);
+        int randIndex = Random.Range(0, randomEventList.Count);
+        EventConfig  eventConfig = randomEventList[randIndex];
+        randomEventList.RemoveAt(randIndex);
+        return eventConfig;
+    }
+
+    private void FillRandomEventList()
+    {
+        randomEventList.AddRange(EventConfigMng.EventDict[1]);
     }
 
 }
