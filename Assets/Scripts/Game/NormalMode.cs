@@ -28,7 +28,7 @@ public class NormalMode : GameModeBase
             healthValue[i] = 50;
         }
 
-        turnCount = 0;
+        turnCount = 1;
         currentEventConfig = RandomEvent();
         UIManager.OpenPanel("GameView",false,healthValue,currentEventConfig,turnCount);
     }
@@ -40,7 +40,7 @@ public class NormalMode : GameModeBase
         {
             healthValue[i] = 50;
         }
-        turnCount = 0;
+        turnCount = 1;
         int randIndex = Random.Range(0, EventConfigMng.EventDict[1].Count);
         currentEventConfig = EventConfigMng.EventDict[1][randIndex];
         UIManager.DispatchMsg("RestartGame",healthValue,currentEventConfig,turnCount);
@@ -91,7 +91,7 @@ public class NormalMode : GameModeBase
         currentEventConfig = nextEventConfigs[nextEventIndex];
 
         turnCount++;
-
+        UIManager.DispatchMsg("NextTurn",turnCount);
         return currentEventConfig;
     }
 

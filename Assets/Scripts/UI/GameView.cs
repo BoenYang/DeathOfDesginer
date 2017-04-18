@@ -19,6 +19,8 @@ public class GameView : UIBase
 
     public Text RoleName;
 
+    public Text TurnCount;
+
     public float EnsureDistance = 20;
 
     public float MaxRotAngle = 40;
@@ -42,7 +44,7 @@ public class GameView : UIBase
     private Dictionary<int, string> roleNameDict = new Dictionary<int, string>
     {
         {1,"老板"},
-        {2,"记着"},
+        {2,"记者"},
         {3,"程序"},
         {4,"美术"},
         {5,"其他策划"},
@@ -60,13 +62,20 @@ public class GameView : UIBase
 
         originPos = CurrentEvent.rectTransform.localPosition;
         AddMsgListener("RestartGame", OnRestartGame);
+        AddMsgListener("NextTurn", OnNextTurn);
+    }
+
+    private void OnNextTurn(UIMsg msg)
+    {
+        int turnCount = (int)msg.args[0];
+        TurnCount.text = string.Format("第{0}个月", turnCount);
     }
 
     public override void OnRefresh()
     {
         healthValue = (int[])Args[0];
         currentEventConfig = Args[1] as EventConfig;
-
+        int turnCount = (int)Args[2];
         for (int i = 0; i < healthValue.Length; i++)
         {
             Bars[i].fillAmount = healthValue[i]/100f;
@@ -76,6 +85,7 @@ public class GameView : UIBase
 
         ChooseDesc.text = currentEventConfig.Event;
         RoleName.text = roleNameDict[currentEventConfig.Hero];
+        TurnCount.text = string.Format("第{0}个月", turnCount);
 
         ChangeIndicator.ForEach((i)=>i.transform.localScale = Vector3.zero);
 
@@ -103,7 +113,6 @@ public class GameView : UIBase
             return;
         }
 
-       
 
         if (Mathf.Abs(xMoveDistance) > EnsureDistance)
         {
@@ -189,11 +198,14 @@ public class GameView : UIBase
         healthValue = (int[])msg.args[0];
         currentEventConfig = msg.args[1] as EventConfig;
 
+        ChooseDesc.text = currentEventConfig.Event;
+        RoleName.text = roleNameDict[currentEventConfig.Hero];
+        TurnCount.text = string.Format("第1个月");
+
         for (int i = 0; i < healthValue.Length; i++)
         {
             Bars[i].fillAmount = healthValue[i] / 100f;
         }
-        ChooseDesc.text = currentEventConfig.Event;
     }
 
     private void SetNextEventImage()
